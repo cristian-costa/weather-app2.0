@@ -26,7 +26,7 @@ class LocationViewController: UIViewController, CLLocationManagerDelegate {
         let currentLocation = locationManager.location
         let currentLatitude = Double((currentLocation?.coordinate.latitude)!)
         let currentLongitude = Double((currentLocation?.coordinate.longitude)!)
-        let location = LocationModel(city: "Mi ubicacion", cord: [currentLongitude, currentLatitude])
+        let location = LocationModel(city: "Mi ubicacion", long: currentLongitude, lat: currentLatitude)
         cityArray.append(location)
     }
     
@@ -71,7 +71,6 @@ extension LocationViewController: UICollectionViewDataSource {
         if let safeCell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifierLocation, for: indexPath) as? CustomCollectionViewCellLocation {
             let cityTotal = cityArray + cityArrayDB
             let city = cityTotal[indexPath.row].getPlace()
-            print(cityTotal[indexPath.row].getCoordinates())
             safeCell.configure(city: city)
             cell = safeCell
         }

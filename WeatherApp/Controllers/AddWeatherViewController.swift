@@ -42,8 +42,8 @@ class AddWeatherViewController: UIViewController {
         collectionViewDaily.dataSource = self
         collectionViewDaily.delegate = self
         
-        let longitute = newCity.getCoordinates()[0]
-        let latitude = newCity.getCoordinates()[1]
+        let longitute = newCity.getLon()
+        let latitude = newCity.getLat()
         
         weatherManager.fetchWeather(latitude: latitude, longitute: longitute)
     }

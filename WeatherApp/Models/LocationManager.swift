@@ -51,8 +51,10 @@ struct LocationManager {
             var cityArray = [LocationModel]()
             for i in 0...decodedData.features.count-1 {
                 let placeName = decodedData.features[i].place_name
-                let coordinates = decodedData.features[i].center
-                let cityInstance = LocationModel(city: placeName, cord: coordinates)
+                let longitude = decodedData.features[i].center[0]
+                let latitude = decodedData.features[i].center[1]
+
+                let cityInstance = LocationModel(city: placeName, long: longitude, lat: latitude)
                 cityArray.append(cityInstance)
             }
             return cityArray

@@ -58,7 +58,8 @@ extension SearchViewController: UITableViewDelegate, UITableViewDataSource {
         let destinationVC = segue.destination as! AddWeatherViewController
         if let indexPath = tableView.indexPathForSelectedRow {
             destinationVC.newCity.setPlace(pl: locationArray[indexPath.row].getPlace())
-            destinationVC.newCity.setCoordinates(coord: locationArray[indexPath.row].getCoordinates())
+            destinationVC.newCity.setLon(lon: locationArray[indexPath.row].getLon())
+            destinationVC.newCity.setLat(lat: locationArray[indexPath.row].getLat())
         }
     }
 }
@@ -68,8 +69,9 @@ extension SearchViewController: LocationManagerDelegate {
         DispatchQueue.main.async {
             for i in 0...location.count-1 {
                 let city = location[i].getPlace()
-                let coord = location[i].getCoordinates()
-                let locationObject = LocationModel(city: city, cord: coord)
+                let latitute = location[i].getLat()
+                let longitute = location[i].getLon()
+                let locationObject = LocationModel(city: city, long: longitute, lat: latitute)
                 self.locationArray.append(locationObject)
             }
             self.tableView.reloadData()

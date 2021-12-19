@@ -8,27 +8,37 @@
 import Foundation
 
 class LocationModel {
-    private dynamic var place: String?
-    private dynamic var coordinates: [Double]?
-    
-    init(city: String? = nil, cord: [Double]? = nil) {
+    private var place: String?
+    private var longitude: Double?
+    private var latitude: Double?
+
+    init(city: String? = nil, long: Double? = nil, lat: Double? = nil) {
         place = city
-        coordinates = cord
+        longitude = long
+        latitude = lat
     }
     
     func getPlace() -> String {
         return place!
     }
     
-    func getCoordinates() -> [Double] {
-        return coordinates!
+    func getLat() -> Double {
+        return latitude!
+    }
+    
+    func getLon() -> Double {
+        return longitude!
     }
     
     func setPlace(pl: String) {
         place = pl
     }
     
-    func setCoordinates(coord: [Double]) {
-        coordinates = coord
+    func setLon(lon: Double) {
+        longitude = lon
+    }
+    
+    func setLat(lat: Double) {
+        latitude = lat
     }
 }

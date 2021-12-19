@@ -53,7 +53,7 @@ class WeatherViewController: UIViewController {
             locationManager.requestLocation()
         } else {
             print("LOAD LOCATION")
-            weatherManager.fetchWeather(latitude: (locationToShow?.getCoordinates()[1])!, longitute: (locationToShow?.getCoordinates()[0])!)
+            weatherManager.fetchWeather(latitude: (locationToShow?.getLat())!, longitute: (locationToShow?.getLon())!)
             navigationItem.title = locationToShow?.getPlace()
         }
     }
