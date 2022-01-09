@@ -6,8 +6,9 @@
 //
 
 import UIKit
+import SwipeCellKit
 
-class CustomCollectionViewCellLocation: UICollectionViewCell {
+class CustomCollectionViewCellLocation: SwipeCollectionViewCell {
     @IBOutlet weak var citylbl: UILabel!
     
     func configure(city: String) {

@@ -138,19 +138,19 @@ class DailyModel {
         var dayInWeek = dateFormatterNameDay.string(from: date)
         let numberDay = dateFormatterDay.string(from: date)
         switch dayInWeek {
-            case "Monday":
+            case "lunes":
                 dayInWeek = "Lun \(numberDay)"
-            case "Tuesday":
+            case "martes":
                 dayInWeek = "Mar \(numberDay)"
-            case "Wednesday":
+            case "miércoles":
                 dayInWeek = "Mie \(numberDay)"
-            case "Thursday":
+            case "jueves":
                 dayInWeek = "Jue \(numberDay)"
-            case "Friday":
+            case "viernes":
                 dayInWeek = "Vie \(numberDay)"
-            case "Saturday":
+            case "sábado":
                 dayInWeek = "Sab \(numberDay)"
-            case "Sunday":
+            case "domingo":
                 dayInWeek = "Dom \(numberDay)"
             default:
                 dayInWeek = "Lun \(numberDay)"

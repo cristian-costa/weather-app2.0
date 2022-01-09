@@ -6,6 +6,7 @@
 //
 
 import UIKit
+import CoreData
 
 class AddWeatherViewController: UIViewController {
     @IBOutlet weak var collectionViewDaily: UICollectionView!
@@ -29,8 +30,14 @@ class AddWeatherViewController: UIViewController {
     let indentifierHourly = "CellHourly"
     let indentifierDaily = "CellDaily"
     
-    let newCity = LocationModel()
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
     
+    var newPlace: String?
+    var newLat: Double?
+    var newLon: Double?
+    
+    var newCity = LocationModelPermanent()
+        
     override func viewDidLoad() {
         super.viewDidLoad()
         mainViewLayer()
@@ -42,10 +49,15 @@ class AddWeatherViewController: UIViewController {
         collectionViewDaily.dataSource = self
         collectionViewDaily.delegate = self
         
-        let longitute = newCity.getLon()
-        let latitude = newCity.getLat()
+        let longitute = newLon
+        let latitude = newLat
         
-        weatherManager.fetchWeather(latitude: latitude, longitute: longitute)
+        newCity = LocationModelPermanent(context: context)
+        newCity.place = newPlace!
+        newCity.latitude = newLat!
+        newCity.longitude = newLon!
+        
+        weatherManager.fetchWeather(latitude: latitude!, longitute: longitute!)
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
@@ -67,7 +79,7 @@ extension AddWeatherViewController: WeatherManagerDelegate {
             self.dailyArr = weather.daily!
             self.hourlyArr = Array(hourlyArray.prefix(24))
             self.descriptionLabel.text = weather.getCurrentDescription().capitalized
-            self.tempLabel.text = weather.getCurrentTemp()
+            self.tempLabel.text = "\(weather.getCurrentTemp())"
             self.maxTempLabel.text = "Máx: \(weather.daily![0].maxTemperatureString())"
             self.minTempLabel.text = "Mín: \(weather.daily![0].minTemperatureString())"
             self.feelsLikeLbl.text = "Sensación térmica: \(weather.getCurrentFeelsLike())º"
@@ -101,14 +113,24 @@ extension AddWeatherViewController: UICollectionViewDataSource {
         var cell = UICollectionViewCell()
         if collectionView == collectionViewHourly {
             if let safeCell = collectionView.dequeueReusableCell(withReuseIdentifier: indentifierHourly, for: indexPath) as? CustomCollectionViewCell {
-                var hour: Int = 999
-                if indexPath.row != 0 {
-                    hour = Calendar.current.component(.hour, from: hourlyArr[indexPath.row].getTime())
-                }
+                var hour = Calendar.current.component(.hour, from: hourlyArr[indexPath.row].getTime())
                 let temp = hourlyArr[indexPath.row].temperatureHourlyString()
-                let time = String(hour)
+                if indexPath.row == 0 {
+                    hour = 999
+                }
                 safeCell.imageLabel.image = UIImage(named: hourlyArr[indexPath.row].conditionName())
-                safeCell.configure(time: time, temp: temp)
+                
+                var dateComponent = DateComponents()
+                dateComponent.day = 1
+                let futureDate = Calendar.current.date(byAdding: dateComponent, to: weatherArr.getTimeSunrise())
+
+                if hourlyArr[indexPath.row].conditionName() == "sun.max" {
+                    if hourlyArr[indexPath.row].getTime() > weatherArr.getTimeSunset() && hourlyArr[indexPath.row].getTime() < futureDate! {
+                        safeCell.imageLabel.image = UIImage(named: "moon.full")
+                    }
+                }
+                
+                safeCell.configure(time: hour, temp: temp)
                 cell = safeCell
             }
         }
@@ -156,51 +178,22 @@ extension AddWeatherViewController {
         
         let numberDay = dateFormatterDay.string(from: currentDateTime)
         var date = dateFormatterNameDay.string(from: currentDateTime)
-        var month = dateFormatterNameMonth.string(from: currentDateTime)
-        
-        switch month {
-            case "January":
-                month = "Enero"
-            case "February":
-                month = "Febrero"
-            case "March":
-                month = "Marzo"
-            case "April":
-                month = "Abril"
-            case "May":
-                month = "Mayo"
-            case "June":
-                month = "Junio"
-            case "July":
-                month = "Julio"
-            case "August":
-                month = "Agosto"
-            case "September":
-                month = "Septiembre"
-            case "October":
-                month = "Octubre"
-            case "November":
-                month = "Noviembre"
-            case "December":
-                month = "Diciembre"
-            default:
-                month = "Diciembre"
-        }
+        let month = dateFormatterNameMonth.string(from: currentDateTime)
         
         switch date {
-            case "Monday":
+            case "lunes":
                 date = "Lunes, \(numberDay) de \(month)"
-            case "Tuesday":
+            case "martes":
                 date = "Martes, \(numberDay) de \(month)"
-            case "Wednesday":
+            case "miércoles":
                 date = "Miércoles, \(numberDay) de \(month)"
-            case "Thursday":
+            case "jueves":
                 date = "Jueves, \(numberDay) de \(month)"
-            case "Friday":
+            case "viernes":
                 date = "Viernes, \(numberDay) de \(month)"
-            case "Saturday":
+            case "sábado":
                 date = "Sábado, \(numberDay) de \(month)"
-            case "Sunday":
+            case "domingo":
                 date = "Domingo, \(numberDay) de \(month)"
             default:
                 date = "Lunes, \(numberDay) de \(month)"

@@ -7,6 +7,7 @@
 
 import UIKit
 import CoreLocation
+import CoreData
 
 class WeatherViewController: UIViewController {
     @IBOutlet weak var collectionViewHourly: UICollectionView!
@@ -37,24 +38,28 @@ class WeatherViewController: UIViewController {
     var hourlyArr = [HourlyModel]()
     var dailyArr = [DailyModel]()
     
-    var locationToShow: LocationModel?
+    var placeToShow: String?
+    var latToShow: Double?
+    var lonToShow: Double?
+    
     var currentLat: Double?
     var currentLon: Double?
     
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(true)
-        print("WILL APPEAR?")
         locationManager.delegate = self
-        locationManager.requestWhenInUseAuthorization()
         
-        if locationToShow == nil {
-            print("REQUEST LOCATION")
+        if latToShow == nil && lonToShow == nil || latToShow == 0.0 && lonToShow == 0.0 {
+            print("NIL")
+            locationManager.requestWhenInUseAuthorization()
             locationManager.requestLocation()
+            navigationItem.title = "Mi ubicacion"
+            
         } else {
-            print("LOAD LOCATION")
-            weatherManager.fetchWeather(latitude: (locationToShow?.getLat())!, longitute: (locationToShow?.getLon())!)
-            navigationItem.title = locationToShow?.getPlace()
+            print("FETCH")
+            weatherManager.fetchWeather(latitude: latToShow!, longitute: lonToShow!)
+            navigationItem.title = placeToShow
         }
     }
     
@@ -71,6 +76,7 @@ class WeatherViewController: UIViewController {
         collectionViewDaily.delegate = self
         
         dateLbl.text = getCurrentDate()
+        
     }
     
     @IBAction func locationBtnPressed(_ sender: UIBarButtonItem) {
@@ -92,7 +98,7 @@ extension WeatherViewController: WeatherManagerDelegate {
             self.dailyArr = weather.daily!
             self.hourlyArr = Array(hourlyArray.prefix(24))
             self.descriptionLabel.text = weather.getCurrentDescription().capitalized
-            self.tempLabel.text = weather.getCurrentTemp()
+            self.tempLabel.text = "\(weather.getCurrentTemp())"
             self.maxTempLabel.text = "Máx: \(weather.daily![0].maxTemperatureString())"
             self.minTempLabel.text = "Mín: \(weather.daily![0].minTemperatureString())"
             self.feelsLikeLbl.text = "Sensación térmica: \(weather.getCurrentFeelsLike())º"
@@ -126,20 +132,24 @@ extension WeatherViewController: UICollectionViewDataSource {
         var cell = UICollectionViewCell()
         if collectionView == collectionViewHourly {
             if let safeCell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as? CustomCollectionViewCell {
-                var hour: Int = 999
-                if indexPath.row != 0 {
-                    hour = Calendar.current.component(.hour, from: hourlyArr[indexPath.row].getTime())
-                }
+                var hour = Calendar.current.component(.hour, from: hourlyArr[indexPath.row].getTime())
                 let temp = hourlyArr[indexPath.row].temperatureHourlyString()
-                let time = String(hour)
+                if indexPath.row == 0 {
+                    hour = 999
+                }
                 safeCell.imageLabel.image = UIImage(named: hourlyArr[indexPath.row].conditionName())
-//                print(hourlyArr[indexPath.row].conditionName())
-//                print(hour)
-//                print(Calendar.current.component(.hour, from: weatherArr.getTimeSunrise()))
-//                if hourlyArr[indexPath.row].conditionName() == "sun.max" && (hour < Calendar.current.component(.hour, from: weatherArr.getTimeSunrise()) && hour > Calendar.current.component(.hour, from: weatherArr.getTimeSunset())) {
-//                    safeCell.imageLabel.image = UIImage(named: "moon.stars.fill")
-//                }
-                safeCell.configure(time: time, temp: temp)
+                
+                var dateComponent = DateComponents()
+                dateComponent.day = 1
+                let futureDate = Calendar.current.date(byAdding: dateComponent, to: weatherArr.getTimeSunrise())
+
+                if hourlyArr[indexPath.row].conditionName() == "sun.max" {
+                    if hourlyArr[indexPath.row].getTime() > weatherArr.getTimeSunset() && hourlyArr[indexPath.row].getTime() < futureDate! {
+                        safeCell.imageLabel.image = UIImage(named: "moon.full")
+                    }
+                }
+                
+                safeCell.configure(time: hour, temp: temp)
                 cell = safeCell
             }
         }
@@ -202,51 +212,22 @@ extension WeatherViewController {
         
         let numberDay = dateFormatterDay.string(from: currentDateTime)
         var date = dateFormatterNameDay.string(from: currentDateTime)
-        var month = dateFormatterNameMonth.string(from: currentDateTime)
-        
-        switch month {
-            case "January":
-                month = "Enero"
-            case "February":
-                month = "Febrero"
-            case "March":
-                month = "Marzo"
-            case "April":
-                month = "Abril"
-            case "May":
-                month = "Mayo"
-            case "June":
-                month = "Junio"
-            case "July":
-                month = "Julio"
-            case "August":
-                month = "Agosto"
-            case "September":
-                month = "Septiembre"
-            case "October":
-                month = "Octubre"
-            case "November":
-                month = "Noviembre"
-            case "December":
-                month = "Diciembre"
-            default:
-                month = "Diciembre"
-        }
+        let month = dateFormatterNameMonth.string(from: currentDateTime)
         
         switch date {
-            case "Monday":
+            case "lunes":
                 date = "Lunes, \(numberDay) de \(month)"
-            case "Tuesday":
+            case "martes":
                 date = "Martes, \(numberDay) de \(month)"
-            case "Wednesday":
+            case "miércoles":
                 date = "Miércoles, \(numberDay) de \(month)"
-            case "Thursday":
+            case "jueves":
                 date = "Jueves, \(numberDay) de \(month)"
-            case "Friday":
+            case "viernes":
                 date = "Viernes, \(numberDay) de \(month)"
-            case "Saturday":
+            case "sábado":
                 date = "Sábado, \(numberDay) de \(month)"
-            case "Sunday":
+            case "domingo":
                 date = "Domingo, \(numberDay) de \(month)"
             default:
                 date = "Lunes, \(numberDay) de \(month)"

@@ -7,27 +7,44 @@
 
 import UIKit
 import CoreLocation
+import CoreData
+import SwipeCellKit
 
 class LocationViewController: UIViewController, CLLocationManagerDelegate {
-    
     @IBOutlet weak var collectionViewLocation: UICollectionView!
     var weatherManager = WeatherManager()
     private let reuseIdentifierLocation = "CellLocation"
     var locationManager = CLLocationManager()
     var cityArray = [LocationModel]()
-    var cityArrayDB = [LocationModel]()
+    let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    var cityArrayDB = [LocationModelPermanent]()
     
     var currentIndex = 0
 
     override func viewDidLoad() {
+        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         super.viewDidLoad()
         collectionViewLocation.dataSource = self
         collectionViewLocation.delegate = self
-        let currentLocation = locationManager.location
-        let currentLatitude = Double((currentLocation?.coordinate.latitude)!)
-        let currentLongitude = Double((currentLocation?.coordinate.longitude)!)
-        let location = LocationModel(city: "Mi ubicacion", long: currentLongitude, lat: currentLatitude)
-        cityArray.append(location)
+        self.loadLocations()
+        collectionViewLocation.reloadData()
+    }
+    
+    func saveLocation() {
+        do {
+            try context.save()
+        } catch {
+            print("Error saving context \(error)")
+        }
+    }
+    
+    func loadLocations() {
+        let request: NSFetchRequest<LocationModelPermanent> = LocationModelPermanent.fetchRequest()
+        do {
+            cityArrayDB = try context.fetch(request)
+        } catch {
+            print("Error fetching data from context \(error)")
+        }
     }
     
     @IBAction func addButtonPressed(_ sender: Any) {
@@ -36,10 +53,15 @@ class LocationViewController: UIViewController, CLLocationManagerDelegate {
     
     @IBAction func unwindToLocation(_ sender: UIStoryboardSegue) {
         collectionViewLocation.reloadData()
+        self.saveLocation()
     }
     
     @IBAction func backBtnPressed(_ sender: Any) {
         _ = self.navigationController?.popViewController(animated: true)
+    }
+    
+    @IBAction func actualUbicationBtnPressed(_ sender: UIButton) {
+        performSegue(withIdentifier: "unwindActualLocation", sender: self)
     }
 }
 
@@ -53,29 +75,60 @@ extension LocationViewController: UICollectionViewDelegate {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "unwindMainWather" {
             let destinationVC = segue.destination as! WeatherViewController
-            let cityTotal = cityArray + cityArrayDB
-            destinationVC.locationToShow = cityTotal[currentIndex]
+            let cityTotal = cityArrayDB
+            destinationVC.placeToShow = cityTotal[currentIndex].place
+            destinationVC.lonToShow = cityTotal[currentIndex].longitude
+            destinationVC.latToShow = cityTotal[currentIndex].latitude
+        }
+        
+        if segue.identifier == "unwindActualLocation" {
+            let destinationVC = segue.destination as! WeatherViewController
+            destinationVC.placeToShow = "Mi ubicacion"
+            destinationVC.lonToShow = 0.0
+            destinationVC.latToShow = 0.0
         }
     }
 }
 
 //MARK: - CollectionViewDataSource
-extension LocationViewController: UICollectionViewDataSource {
+extension LocationViewController: UICollectionViewDataSource, SwipeCollectionViewCellDelegate {
+    
+    func collectionView(_ collectionView: UICollectionView, editActionsForItemAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> [SwipeAction]? {
+        guard orientation == .right else { return nil }
+
+        let deleteAction = SwipeAction(style: .destructive, title: "Delete") { action, indexPath in
+            self.context.delete(self.cityArrayDB[indexPath.row])
+            self.cityArrayDB.remove(at: indexPath.row)
+            self.saveLocation()
+        }
+
+        // customize the action appearance
+        deleteAction.image = UIImage(named: "delete-icon")
+
+        return [deleteAction]
+    }
+    
+    func collectionView(_ collectionView: UICollectionView, editActionsOptionsForItemAt indexPath: IndexPath, for orientation: SwipeActionsOrientation) -> SwipeOptions {
+        var options = SwipeOptions()
+        options.expansionStyle = .destructive
+//        options.transitionStyle = .border
+        return options
+    }
+    
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        let cityTotal = cityArray + cityArrayDB
+        let cityTotal = cityArrayDB
         return cityTotal.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        var cell = UICollectionViewCell()
-        if let safeCell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifierLocation, for: indexPath) as? CustomCollectionViewCellLocation {
-            let cityTotal = cityArray + cityArrayDB
-            let city = cityTotal[indexPath.row].getPlace()
-            safeCell.configure(city: city)
-            cell = safeCell
-        }
+        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifierLocation, for: indexPath) as! CustomCollectionViewCellLocation
+        let cityTotal = cityArrayDB
+        let city = cityTotal[indexPath.row].place
+        cell.configure(city: city!)
+        cell.delegate = self
         return cell
     }
+    
 }
 
 //MARK: - UICollectionViewDelegateFlowLayout
@@ -85,6 +138,6 @@ extension LocationViewController: UICollectionViewDelegateFlowLayout {
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        return CGSize(width: view.frame.width, height: 50)
+        return CGSize(width: view.frame.width, height: 100)
     }
 }

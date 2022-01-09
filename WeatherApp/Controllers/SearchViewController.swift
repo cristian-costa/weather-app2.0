@@ -34,7 +34,8 @@ extension SearchViewController: UISearchBarDelegate {
             locationArray = []
         }
         locationArray = []
-        locationManager.fetchWeather(city: searchBar.text!)
+        let str = searchBar.text!.replacingOccurrences(of: " ", with: "%20")
+        locationManager.fetchWeather(city: str)
         tableView.reloadData()
     }
 }
@@ -57,9 +58,9 @@ extension SearchViewController: UITableViewDelegate, UITableViewDataSource {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         let destinationVC = segue.destination as! AddWeatherViewController
         if let indexPath = tableView.indexPathForSelectedRow {
-            destinationVC.newCity.setPlace(pl: locationArray[indexPath.row].getPlace())
-            destinationVC.newCity.setLon(lon: locationArray[indexPath.row].getLon())
-            destinationVC.newCity.setLat(lat: locationArray[indexPath.row].getLat())
+            destinationVC.newPlace = locationArray[indexPath.row].getPlace()
+            destinationVC.newLon = locationArray[indexPath.row].getLon()
+            destinationVC.newLat = locationArray[indexPath.row].getLat()
         }
     }
 }
