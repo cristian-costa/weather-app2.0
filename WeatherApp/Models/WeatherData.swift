@@ -9,6 +9,7 @@ import Foundation
 
 struct WeatherData: Codable {
     let current: Current
+    let timezone_offset: Double
     let hourly: [Hourly]
     let daily: [Daily]
 }

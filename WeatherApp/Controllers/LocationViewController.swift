@@ -22,7 +22,7 @@ class LocationViewController: UIViewController, CLLocationManagerDelegate {
     var currentIndex = 0
 
     override func viewDidLoad() {
-        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
+//        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         super.viewDidLoad()
         collectionViewLocation.dataSource = self
         collectionViewLocation.delegate = self

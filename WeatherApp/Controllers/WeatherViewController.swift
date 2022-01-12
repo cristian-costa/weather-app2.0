@@ -132,31 +132,48 @@ extension WeatherViewController: UICollectionViewDataSource {
         var cell = UICollectionViewCell()
         if collectionView == collectionViewHourly {
             if let safeCell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifier, for: indexPath) as? CustomCollectionViewCell {
-                var hour = Calendar.current.component(.hour, from: hourlyArr[indexPath.row].getTime())
+                let GMT = 3600
+                let hoursGMT = weatherArr.getTimezone() / GMT
+                
+                //Hour
+                let date = hourlyArr[indexPath.row].getTime(timezone: weatherArr.getTimezone())
+                let formatter = DateFormatter()
+                formatter.dateFormat = "HH"
+                formatter.timeZone = TimeZone(secondsFromGMT: weatherArr.getTimezone())
+                var hour = formatter.string(from: date)
+                
+                var dateComponentsHourly = DateComponents()
+                dateComponentsHourly.hour = hoursGMT
+                let dateHourly = Calendar.current.date(byAdding: .hour, value: hoursGMT, to: date)
+                
+                //Temp
                 let temp = hourlyArr[indexPath.row].temperatureHourlyString()
                 if indexPath.row == 0 {
-                    hour = 999
+                    hour = "999"
                 }
+                
+                //Image
+                var sunrise = Calendar.current.date(byAdding: .hour, value: hoursGMT, to: weatherArr.getTimeSunrise())
+                let sunset = Calendar.current.date(byAdding: .hour, value: hoursGMT, to: weatherArr.getTimeSunset())
+                sunrise = Calendar.current.date(byAdding: .day, value: 1, to: sunrise!)
+
                 safeCell.imageLabel.image = UIImage(named: hourlyArr[indexPath.row].conditionName())
                 
-                var dateComponent = DateComponents()
-                dateComponent.day = 1
-                let futureDate = Calendar.current.date(byAdding: dateComponent, to: weatherArr.getTimeSunrise())
-
                 if hourlyArr[indexPath.row].conditionName() == "sun.max" {
-                    if hourlyArr[indexPath.row].getTime() > weatherArr.getTimeSunset() && hourlyArr[indexPath.row].getTime() < futureDate! {
+                    print("ENTER IF")
+                    if dateHourly! > sunset! && dateHourly! < sunrise! {
                         safeCell.imageLabel.image = UIImage(named: "moon.full")
                     }
                 }
                 
-                safeCell.configure(time: hour, temp: temp)
+                safeCell.configure(time: Int(hour)!, temp: temp)
                 cell = safeCell
             }
         }
         
         if collectionView == collectionViewDaily {
             if let safeCell = collectionView.dequeueReusableCell(withReuseIdentifier: reuseIdentifierDaily, for: indexPath) as? CustomCollectionViewCellDaily {
-                let day = dailyArr[indexPath.row].getTime()
+                let day = dailyArr[indexPath.row].getTime(time: weatherArr.getTimezone())
                 let min = dailyArr[indexPath.row].minTemperatureString()
                 let max = dailyArr[indexPath.row].maxTemperatureString()
                 safeCell.imageView.image = UIImage(named: dailyArr[indexPath.row].conditionName())

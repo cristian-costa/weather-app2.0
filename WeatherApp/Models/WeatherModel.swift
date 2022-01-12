@@ -14,11 +14,12 @@ class WeatherModel {
     private let currentDescription: String?
     private let currentSunrise: Double?
     private let currentSunset: Double?
+    private let timezone: Double?
     
     let daily: [DailyModel]?
     let hourly: [HourlyModel]?
     
-    init(temp: Double? = nil, id: Int? = nil, description: String? = nil, hour: [HourlyModel]? = nil, day: [DailyModel]? = nil, feelsLike: Double? = nil, sunr: Double? = nil, suns: Double? = nil) {
+    init(temp: Double? = nil, id: Int? = nil, description: String? = nil, hour: [HourlyModel]? = nil, day: [DailyModel]? = nil, feelsLike: Double? = nil, sunr: Double? = nil, suns: Double? = nil, tim: Double? = nil) {
         currentTemp = temp
         currentConditionId = id
         currentDescription = description
@@ -27,6 +28,7 @@ class WeatherModel {
         currentFeelsLike = feelsLike
         currentSunrise = sunr
         currentSunset = suns
+        timezone = tim
     }
     
     func getCurrentTemp() -> String {
@@ -61,11 +63,17 @@ class WeatherModel {
     }
     
     func getTimeSunrise() -> Date {
-        return Date(timeIntervalSince1970: Double(currentSunrise!))
+        let date = Date(timeIntervalSince1970: Double(currentSunrise!))
+        return date
     }
     
     func getTimeSunset() -> Date {
-        return Date(timeIntervalSince1970: Double(currentSunset!))
+        let date = Date(timeIntervalSince1970: Double(currentSunset!))
+        return date
+    }
+    
+    func getTimezone() -> Int {
+        return Int(timezone!)
     }
 }
 
@@ -86,25 +94,44 @@ class HourlyModel {
 
     func conditionName() -> String {
         switch conditionId {
+//            case 200...232:
+//                return "cloud.bolt.rain"
+//            case 300...321:
+//                return "cloud.drizzle"
+//            case 500...531:
+//                return "cloud.rain"
+//            case 600...622:
+//                return "cloud.snow"
+//            case 701...781:
+//                return "cloud.fog"
+//            case 800:
+//                return "sun.max"
+//            default:
+//                return "cloud"
             case 200...232:
-                return "cloud.bolt.rain"
+                return "sun.max"
             case 300...321:
-                return "cloud.drizzle"
+                return "sun.max"
             case 500...531:
-                return "cloud.rain"
+                return "sun.max"
             case 600...622:
-                return "cloud.snow"
+                return "sun.max"
             case 701...781:
-                return "cloud.fog"
+                return "sun.max"
             case 800:
                 return "sun.max"
             default:
-                return "cloud"
+                return "sun.max"
         }
     }
     
-    func getTime() -> Date {
-        return Date(timeIntervalSince1970: Double(time))
+    func getTime(timezone: Int) -> Date {
+        let date = Date(timeIntervalSince1970: Double(time))
+        return date
+    }
+    
+    func getTimeDouble() -> Int {
+        return time
     }
 }
 
@@ -129,12 +156,19 @@ class DailyModel {
         return "\(String(format: "%.0f", maxTemp))°"
     }
     
-    func getTime() -> String {
+    
+    func getTime(time: Int) -> String {
         let date = Date(timeIntervalSince1970: Double(time))
+        
         let dateFormatterNameDay = DateFormatter()
         let dateFormatterDay = DateFormatter()
         dateFormatterDay.dateFormat = "d MMM"
         dateFormatterNameDay.dateFormat = "EEEE"
+    
+        dateFormatterDay.timeZone = TimeZone(secondsFromGMT: timezone)
+        dateFormatterNameDay.timeZone = TimeZone(secondsFromGMT: timezone)
+
+        
         var dayInWeek = dateFormatterNameDay.string(from: date)
         let numberDay = dateFormatterDay.string(from: date)
         switch dayInWeek {

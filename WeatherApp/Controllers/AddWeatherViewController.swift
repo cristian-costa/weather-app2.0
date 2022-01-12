@@ -49,19 +49,15 @@ class AddWeatherViewController: UIViewController {
         collectionViewDaily.dataSource = self
         collectionViewDaily.delegate = self
         
-        let longitute = newLon
-        let latitude = newLat
-        
-        newCity = LocationModelPermanent(context: context)
-        newCity.place = newPlace!
-        newCity.latitude = newLat!
-        newCity.longitude = newLon!
-        
-        weatherManager.fetchWeather(latitude: latitude!, longitute: longitute!)
+        weatherManager.fetchWeather(latitude: newLat!, longitute: newLon!)
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         let destinationVC = segue.destination as! LocationViewController
+        newCity = LocationModelPermanent(context: context)
+        newCity.place = newPlace!
+        newCity.latitude = newLat!
+        newCity.longitude = newLon!
         destinationVC.cityArrayDB.append(newCity)
     }
     
@@ -113,31 +109,41 @@ extension AddWeatherViewController: UICollectionViewDataSource {
         var cell = UICollectionViewCell()
         if collectionView == collectionViewHourly {
             if let safeCell = collectionView.dequeueReusableCell(withReuseIdentifier: indentifierHourly, for: indexPath) as? CustomCollectionViewCell {
-                var hour = Calendar.current.component(.hour, from: hourlyArr[indexPath.row].getTime())
+                //Hour
+                let date = Date(timeIntervalSince1970: Double(hourlyArr[indexPath.row].time))
+                let formatter = DateFormatter()
+                formatter.dateFormat = "HH"
+                formatter.timeZone = TimeZone(secondsFromGMT: weatherArr.getTimezone())
+                var hour = formatter.string(from: date)
+                            
+                //Temp
                 let temp = hourlyArr[indexPath.row].temperatureHourlyString()
                 if indexPath.row == 0 {
-                    hour = 999
+                    hour = "999"
                 }
-                safeCell.imageLabel.image = UIImage(named: hourlyArr[indexPath.row].conditionName())
                 
+                //Image
                 var dateComponent = DateComponents()
                 dateComponent.day = 1
                 let futureDate = Calendar.current.date(byAdding: dateComponent, to: weatherArr.getTimeSunrise())
-
+                
+                safeCell.imageLabel.image = UIImage(named: hourlyArr[indexPath.row].conditionName())
+                
                 if hourlyArr[indexPath.row].conditionName() == "sun.max" {
-                    if hourlyArr[indexPath.row].getTime() > weatherArr.getTimeSunset() && hourlyArr[indexPath.row].getTime() < futureDate! {
+                    if hourlyArr[indexPath.row].getTime(timezone: weatherArr.getTimezone())
+                        > weatherArr.getTimeSunset() && hourlyArr[indexPath.row].getTime(timezone: weatherArr.getTimezone()) < futureDate! {
                         safeCell.imageLabel.image = UIImage(named: "moon.full")
                     }
                 }
                 
-                safeCell.configure(time: hour, temp: temp)
+                safeCell.configure(time: Int(hour)!, temp: temp)
                 cell = safeCell
             }
         }
         
         if collectionView == collectionViewDaily {
             if let safeCell = collectionView.dequeueReusableCell(withReuseIdentifier: indentifierDaily, for: indexPath) as? CustomCollectionViewCellDaily {
-                let day = dailyArr[indexPath.row].getTime()
+                let day = dailyArr[indexPath.row].getTime(time: weatherArr.getTimezone())
                 let min = dailyArr[indexPath.row].minTemperatureString()
                 let max = dailyArr[indexPath.row].maxTemperatureString()
                 safeCell.imageView.image = UIImage(named: dailyArr[indexPath.row].conditionName())

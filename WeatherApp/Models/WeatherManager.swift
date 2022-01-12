@@ -20,6 +20,7 @@ struct WeatherManager {
     
     func fetchWeather(latitude: CLLocationDegrees, longitute: CLLocationDegrees) {
         let urlString = "\(weatherURL)&appid=\(token)&lat=\(latitude)&lon=\(longitute)"
+        print(urlString)
         performRequest(with: urlString)
     }
     
@@ -49,6 +50,7 @@ struct WeatherManager {
         do {
             let decodedData = try decoder.decode(WeatherData.self, from: weatherData)
             let currentId = decodedData.current.weather[0].id
+            let currentTimezone = decodedData.timezone_offset
             let currentDescription = decodedData.current.weather[0].description
             let currentTemp = decodedData.current.temp
             let currentFeelsLike = decodedData.current.feels_like
@@ -74,7 +76,7 @@ struct WeatherManager {
                 arrayDailyModel.append(dailyModelInstance)
             }
             
-            let weather = WeatherModel(temp: currentTemp, id: currentId, description: currentDescription, hour: arrayHourlyModel, day: arrayDailyModel, feelsLike: currentFeelsLike, sunr: sunrise, suns: sunset)
+            let weather = WeatherModel(temp: currentTemp, id: currentId, description: currentDescription, hour: arrayHourlyModel, day: arrayDailyModel, feelsLike: currentFeelsLike, sunr: sunrise, suns: sunset, tim: currentTimezone)
             return weather
         } catch {
             delegate?.didFailWithError(error: error)
