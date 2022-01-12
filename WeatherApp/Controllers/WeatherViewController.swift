@@ -160,7 +160,6 @@ extension WeatherViewController: UICollectionViewDataSource {
                 safeCell.imageLabel.image = UIImage(named: hourlyArr[indexPath.row].conditionName())
                 
                 if hourlyArr[indexPath.row].conditionName() == "sun.max" {
-                    print("ENTER IF")
                     if dateHourly! > sunset! && dateHourly! < sunrise! {
                         safeCell.imageLabel.image = UIImage(named: "moon.full")
                     }
